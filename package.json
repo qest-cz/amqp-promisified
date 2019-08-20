@@ -1,13 +1,11 @@
 {
   "name": "@qest/amqp-promisified",
   "version": "0.0.1",
-  "description": "Simple wrapper around amqplib callback api. ",
+  "description": "Simple wrapper around amqplib callback api.",
   "main": "index.js",
   "repository": "https://github.com/qest-cz/nodejs-typescript-starter.git",
   "author": "Radim Štěpaník <radim.stepanik@gmail.com>",
-  "contributors": [
-    "Jindřich Máca <jindrich.maca@qest.cz>"
-  ],
+  "contributors": [],
   "license": "MIT",
   "scripts": {
     "build": "rimraf dist && tsc",

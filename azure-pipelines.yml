@@ -1,0 +1,24 @@
+pool:
+  name: Qest Linux
+steps:
+  - task: NodeTool@0
+    displayName: 'Use Node 10.x'
+    inputs:
+      versionSpec: 10.x
+
+  - task: geeklearningio.gl-vsts-tasks-yarn.yarn-installer-task.YarnInstaller@3
+    displayName: 'Use Yarn 1.x'
+
+  - script: yarn
+    displayName: 'yarn install'
+
+  - script: 'yarn build'
+    displayName: 'yarn build'
+
+  - task: Npm@1
+    displayName: 'npm publish'
+    inputs:
+      command: custom
+      verbose: false
+      customCommand: 'publish --access public'
+      customEndpoint: 'qest-npm
