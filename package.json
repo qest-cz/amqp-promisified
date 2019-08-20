@@ -2,7 +2,7 @@
   "name": "@qest/amqp-promisified",
   "version": "0.0.6",
   "description": "Simple wrapper around amqplib callback api.",
-  "main": "dist/src/index.js",
+  "main": "dist/index.js",
   "repository": "https://github.com/qest-cz/nodejs-typescript-starter.git",
   "author": "Radim Štěpaník <radim.stepanik@gmail.com>",
   "contributors": [],
