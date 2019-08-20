@@ -2,6 +2,10 @@
 
 Simple wrapper around ampqlib. There is implemented most relevant use cases with rabbit-mq.
 
+## Instalation
+```bash
+yarn add @qest/amqp-promisified
+```
 
 ## Basic  scripts
 
@@ -13,7 +17,7 @@ Example is based on official documentation of lib - https://www.rabbitmq.com/tut
 
 
 ```typescript
-import { createChannel, RabbitConsumer, RabbitPublisher } from '../index';
+import { RabbitConsumer, RabbitPublisher } from '@qest/amqp-promisified';
 
 interface IMyMessage {
     message: string;
@@ -21,22 +25,20 @@ interface IMyMessage {
     messageCounter: number;
 }
 
-let i = 0;
+const listener = {
+    listen: (msg) => console.log(`type: ${msg.type}, message: ${msg.message}, count: ${msg.messageCounter}`), // tslint:disable-line
+};
 
 const main = async () => {
-    const channel = await createChannel(process.env.RABBIT_URL);
+    let i = 0;
+    await new RabbitConsumer<IMyMessage>(process.env.RABBIT_URL, 'qest').use(listener).subscribe();
 
-    await new RabbitConsumer<IMyMessage>(channel, 'qest')
-        .use({
-            listen: (msg) => console.log(`type: ${msg.type}, message: ${msg.message}, count: ${msg.messageCounter}`), // tslint:disable-line
-        })
-        .subscribe();
-
-    const publisher = new RabbitPublisher<IMyMessage>(channel, 'qest');
+    const publisher = new RabbitPublisher<IMyMessage>(process.env.RABBIT_URL, 'qest');
     setInterval(() => publisher.publish({ messageCounter: i++, type: 'test', message: `$test ${i}` }), 1000);
 };
 
 main();
+
 
 
 

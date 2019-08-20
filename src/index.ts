@@ -1,9 +1,8 @@
-// tslint:disable
-import { Options, connect, Message, Replies } from 'amqplib';
+import { connect, Message, Options, Replies } from 'amqplib';
 
 export const createChannel = async (rabbitUrl: string) => {
     const con = await connect(rabbitUrl);
-    return await con.createChannel();
+    return con.createChannel();
 };
 
 export interface ISubscribe<M extends Object> {
