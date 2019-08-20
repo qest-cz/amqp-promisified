@@ -1,49 +1,43 @@
-# Nodejs typescript starter
+# Ampql-promisifies 
 
-If you need typescript starter pack for node.js development. You are on
-right place. Repository contains only must have (for our point of view)
-dependencies to build. The repository solves 4 main parts
+Simple wrapper around ampqlib. There is implemented most relevant use cases with rabbit-mq.
 
-- **Run in development mode** - we use `ts-node` as a typescript execution environment,
-`dot-env` library for setting up environment variables
-- **Run tests** there is a predefined way how to run tests with `mocha`, in future we will replace with `jest` probably
-- **Build application** - for build is used classic way of `tsc`
-- **Run in production mode** - run compiled code
 
-## List of used libraries
+## Basic  scripts
 
-- `mocha`, `chai` for testing - it will be updated with jest in 0.1.0
-- `nyc` for code coverage
-- `prettier`, `tslint` for code style checking
-- `ts-node-dev` for running project in development mode (automatic restart on change)
-- `pino-pretty` for nice console output
+- `yarn examples:publish-subscribe`
+run basic example, it is necessary to create .env in config folder or set RABBIT_URL env environment
 
-## Scripts
+## Example
+Example is based on official documentation of lib - https://www.rabbitmq.com/tutorials/tutorial-three-javascript.html
 
-### Basic  scripts
 
-- `yarn`
-install dependencies
-- `yarn build`
-build application
-- `yarn dev`
-start development mode
-- `yarn test`
-run tests
-- `yarn code:fix`
-apply prettier rules for project
-- `yarn start`
-start compiled application
+```typescript
+import { createChannel, RabbitConsumer, RabbitPublisher } from '../index';
 
-### Useful for CI/CD
+interface IMyMessage {
+    message: string;
+    type: string;
+    messageCounter: number;
+}
 
-- `yarn test:cover`
- check code coverage in project - it can be set in package.json (nyc part)
-- `yarn code:check`
- checking code style policies by prettier and tslint
+let i = 0;
 
-### FAQ
+const main = async () => {
+    const channel = await createChannel(process.env.RABBIT_URL);
 
-**Where can env variables can be set?**
+    await new RabbitConsumer<IMyMessage>(channel, 'qest')
+        .use({
+            listen: (msg) => console.log(`type: ${msg.type}, message: ${msg.message}, count: ${msg.messageCounter}`), // tslint:disable-line
+        })
+        .subscribe();
 
-- For setting of env variables is used [dotenv package](https://www.npmjs.com/package/dotenv), there are .env files in `./config` folder
+    const publisher = new RabbitPublisher<IMyMessage>(channel, 'qest');
+    setInterval(() => publisher.publish({ messageCounter: i++, type: 'test', message: `$test ${i}` }), 1000);
+};
+
+main();
+
+
+
+```

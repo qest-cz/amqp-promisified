@@ -15,6 +15,7 @@
     "tslint:check": "tslint -c tslint.json -p .",
     "tsc:check": "tsc --noEmit",
     "dev": "cross-env NODE_ENV=dev ts-node-dev --no-notify -r dotenv/config src/index.ts dotenv_config_path=./config/.env | pino-pretty",
+    "examples:publish-subscribe": "cross-env NODE_ENV=dev ts-node-dev --no-notify -r dotenv/config src/examples/publish-subscribe.ts dotenv_config_path=./config/.env | pino-pretty",
     "code:fix": "concurrently \"yarn tslint:run\" \"yarn prettier:run\"",
     "code:check": "concurrently \"yarn prettier:check\" \"yarn tslint:check\" \"yarn tsc:check\"",
     "test": "cross-env TS_NODE_PROJECT=\\\"tsconfig.test.json\\\" node -r dotenv/config ./node_modules/mocha/bin/_mocha dotenv_config_path=./config/.env.test --opts mocha.opts",

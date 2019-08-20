@@ -1,50 +1,24 @@
-import { Amqp, AmqpChannel, IAmqpChannelConsumer } from '../rabbitmq-promisified';
+import { createChannel, RabbitConsumer, RabbitPublisher } from '../index';
 
-const EXCHANGE = 'logs';
-
-interface IMessage {
-    user: string;
-    sex: 'male' | 'woman';
+interface IMyMessage {
+    message: string;
+    type: string;
+    messageCounter: number;
 }
 
-const consumer: IAmqpChannelConsumer<IMessage> = {
-    listen: async (msg) => {
-        console.log(`sex: ${msg.content.sex}, user: ${msg.content.user}`); // tslint:disable-line
-    },
-};
-
-export const createChannel = async () => {
-    const con = await new Amqp().connect(process.env.RABBIT_URL);
-    const channel = await con.createChannel();
-    return channel;
-};
-
-const receiver = async (channel: AmqpChannel) => {
-    await channel.assertExchange(EXCHANGE, 'fanout', { durable: false });
-    const q = await channel.assertQueue('', { exclusive: true });
-    channel.bindQueue(q.queue, EXCHANGE, '');
-
-    channel.consume(q.queue, consumer, {});
-};
-
-const emmiter = async (channel: AmqpChannel) => {
-    let i = 0;
-    setInterval(async () => {
-        i++;
-        await channel.assertExchange(EXCHANGE, 'fanout', {
-            durable: false,
-        });
-        channel.publishObject<IMessage>(EXCHANGE, '', {
-            user: `Karel${i}`,
-            sex: 'male',
-        });
-    }, 2000);
-};
+let i = 0;
 
 const main = async () => {
-    const channel = await createChannel();
-    await receiver(channel);
-    await emmiter(channel);
+    const channel = await createChannel(process.env.RABBIT_URL);
+
+    await new RabbitConsumer<IMyMessage>(channel, 'qest')
+        .use({
+            listen: (msg) => console.log(`type: ${msg.type}, message: ${msg.message}, count: ${msg.messageCounter}`), // tslint:disable-line
+        })
+        .subscribe();
+
+    const publisher = new RabbitPublisher<IMyMessage>(channel, 'qest');
+    setInterval(() => publisher.publish({ messageCounter: i++, type: 'test', message: `$test ${i}` }), 1000);
 };
 
 main();
