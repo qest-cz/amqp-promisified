@@ -1,5 +1,1 @@
-const main = async () => {
-    return ;
-};
-
-main();
+export * from './rabbitmq-promisified';
