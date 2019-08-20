@@ -21,4 +21,4 @@ steps:
       command: custom
       verbose: false
       customCommand: 'publish --access public'
-      customEndpoint: 'qest-npm
+      customEndpoint: 'qest-npm'
