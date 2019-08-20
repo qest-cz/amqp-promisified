@@ -1,6 +1,6 @@
 {
   "name": "@qest/amqp-promisified",
-  "version": "0.0.8",
+  "version": "0.0.9",
   "description": "Simple wrapper around amqplib callback api.",
   "main": "dist/index.js",
   "types": "dist/index.d.ts",
