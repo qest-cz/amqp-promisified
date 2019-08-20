@@ -3,6 +3,7 @@
   "version": "0.0.7",
   "description": "Simple wrapper around amqplib callback api.",
   "main": "dist/index.js",
+  "types": "dist/index.d.ts",
   "repository": "https://github.com/qest-cz/nodejs-typescript-starter.git",
   "author": "Radim Štěpaník <radim.stepanik@gmail.com>",
   "contributors": [],
