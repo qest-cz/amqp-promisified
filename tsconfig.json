@@ -3,11 +3,14 @@
     "target": "es6",
     "module": "commonjs",
     "outDir": "./dist",
+    "baseUrl": "./",
     "rootDir": "",
     "sourceMap": true,
     "removeComments": true,
-    "declaration": false,
+    "declaration": true,
+    "esModuleInterop": true,
     "moduleResolution": "node",
+    "allowSyntheticDefaultImports": true,
     "typeRoots": [
       "node_modules/@types"
     ],
@@ -19,6 +22,7 @@
     "./scripts/**/*.ts"
   ],
   "exclude": [
-    "./node_modules"
+    "./node_modules",
+    "dist"
   ]
 }
