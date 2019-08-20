@@ -1,4 +1,4 @@
-import { createChannel, RabbitConsumer, RabbitPublisher } from '../index';
+import { RabbitConsumer, RabbitPublisher } from '../index';
 
 interface IMyMessage {
     message: string;
@@ -9,15 +9,13 @@ interface IMyMessage {
 let i = 0;
 
 const main = async () => {
-    const channel = await createChannel(process.env.RABBIT_URL);
-
-    await new RabbitConsumer<IMyMessage>(channel, 'qest')
+    await new RabbitConsumer<IMyMessage>(process.env.RABBIT_URL, 'qest')
         .use({
             listen: (msg) => console.log(`type: ${msg.type}, message: ${msg.message}, count: ${msg.messageCounter}`), // tslint:disable-line
         })
         .subscribe();
 
-    const publisher = new RabbitPublisher<IMyMessage>(channel, 'qest');
+    const publisher = new RabbitPublisher<IMyMessage>(process.env.RABBIT_URL, 'qest');
     setInterval(() => publisher.publish({ messageCounter: i++, type: 'test', message: `$test ${i}` }), 1000);
 };
 

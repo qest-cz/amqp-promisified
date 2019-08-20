@@ -1,5 +1,5 @@
 // tslint:disable
-import { Channel, Options, connect, Message, Replies } from 'amqplib';
+import { Options, connect, Message, Replies } from 'amqplib';
 
 export const createChannel = async (rabbitUrl: string) => {
     const con = await connect(rabbitUrl);
@@ -11,14 +11,14 @@ export interface ISubscribe<M extends Object> {
 }
 
 export class RabbitConsumer<M extends Object = any> {
-    private channel: Channel;
+    private rabbitMqUrl: string;
     private exchange: string;
     private type: string;
     private options: Options.AssertExchange;
     private subscribes: ISubscribe<M>[] = [];
 
-    constructor(channel: Channel, exchange: string, type = 'fanout', options: Options.AssertExchange = { durable: false }) {
-        this.channel = channel;
+    constructor(rabbitMqUrl: string, exchange: string, type = 'fanout', options: Options.AssertExchange = { durable: false }) {
+        this.rabbitMqUrl = rabbitMqUrl;
         this.exchange = exchange;
         this.type = type;
         this.options = options;
@@ -35,10 +35,11 @@ export class RabbitConsumer<M extends Object = any> {
         consumeOptions: Options.Consume = {},
         pattern: string = '',
     ): Promise<Replies.Consume> {
-        await this.channel.assertExchange(this.exchange, this.type, this.options);
-        const q = await this.channel.assertQueue(queue, queueOptions);
-        await this.channel.bindQueue(q.queue, this.exchange, pattern);
-        return this.channel.consume(
+        const channel = await createChannel(this.rabbitMqUrl);
+        await channel.assertExchange(this.exchange, this.type, this.options);
+        const q = await channel.assertQueue(queue, queueOptions);
+        await channel.bindQueue(q.queue, this.exchange, pattern);
+        return channel.consume(
             q.queue,
             (msg: Message) => {
                 const parsed: M = JSON.parse(msg.content.toString());
@@ -50,19 +51,20 @@ export class RabbitConsumer<M extends Object = any> {
 }
 
 export class RabbitPublisher<T extends Object = any> {
-    private channel: Channel;
+    private rabbitMqUrl: string;
     private exchange: string;
     private type: string;
     private options: Options.AssertExchange;
 
-    constructor(channel: Channel, exchange: string, type = 'fanout', options: Options.AssertExchange = { durable: false }) {
-        this.channel = channel;
+    constructor(rabbitMqUrl: string, exchange: string, type = 'fanout', options: Options.AssertExchange = { durable: false }) {
+        this.rabbitMqUrl = rabbitMqUrl;
         this.exchange = exchange;
         this.type = type;
         this.options = options;
     }
     async publish(object: T, routingKey: string = '') {
-        await this.channel.assertExchange(this.exchange, this.type, this.options);
-        return this.channel.publish(this.exchange, routingKey, Buffer.from(JSON.stringify(object)));
+        const channel = await createChannel(this.rabbitMqUrl);
+        await channel.assertExchange(this.exchange, this.type, this.options);
+        return channel.publish(this.exchange, routingKey, Buffer.from(JSON.stringify(object)));
     }
 }
