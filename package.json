@@ -1,6 +1,6 @@
 {
   "name": "@qest/amqp-promisified",
-  "version": "0.0.3",
+  "version": "0.0.4",
   "description": "Simple wrapper around amqplib callback api.",
   "main": "dist/src/index.js",
   "repository": "https://github.com/qest-cz/nodejs-typescript-starter.git",
