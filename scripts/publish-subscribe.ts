@@ -1,25 +1,4 @@
-# Ampql-promisifies 
-
-Simple wrapper around ampqlib. There is implemented most relevant use cases with rabbit-mq.
-
-## Instalation
-```bash
-yarn add @qest/amqp-promisified
-```
-
-## Basic  scripts
-
-- `yarn examples:publish-subscribe`
-run basic example, it is necessary to create .env in config folder or set RABBIT_URL env environment
-
-## Examples
-
-### Publish/subscribe
-Example is based on official documentation of lib - https://www.rabbitmq.com/tutorials/tutorial-three-javascript.html
-
-
-```typescript
-import { RabbitConsumer, RabbitPublisher } from '@qest/amqp-promisified';
+import { RabbitConsumer, RabbitPublisher } from '../src';
 
 interface IMyMessage {
     message: string;
@@ -50,9 +29,3 @@ const main = async () => {
 };
 
 main();
-
-
-
-
-
-```
