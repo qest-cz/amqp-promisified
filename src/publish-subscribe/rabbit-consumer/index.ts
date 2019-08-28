@@ -1,16 +1,15 @@
-import { Channel, connect, Message, Options, Replies } from 'amqplib';
-import { ISubscribe } from '../index';
+import { Message, Options, Replies } from 'amqplib';
+import { ISubscribe } from '../../index';
+import { RabbitSide } from '../../rabbit-side';
 
-export class RabbitConsumer<M extends Object = any> {
-    private readonly rabbitMqUrl: string;
+export class RabbitConsumer<M extends Object = any> extends RabbitSide {
     private readonly exchange: string;
     private readonly type: string;
     private readonly options: Options.AssertExchange;
     private readonly subscribes: ISubscribe<M>[] = [];
-    private channel: Channel;
 
     constructor(rabbitMqUrl: string, exchange: string, type = 'fanout', options: Options.AssertExchange = { durable: false }) {
-        this.rabbitMqUrl = rabbitMqUrl;
+        super(rabbitMqUrl);
         this.exchange = exchange;
         this.type = type;
         this.options = options;
@@ -39,19 +38,5 @@ export class RabbitConsumer<M extends Object = any> {
             },
             consumeOptions,
         );
-    }
-
-    async close() {
-        await this.channel.close();
-        this.channel = null;
-    }
-
-    private async getChannel(): Promise<Channel> {
-        if (this.channel) {
-            return this.channel;
-        }
-        const con = await connect(this.rabbitMqUrl);
-        this.channel = await con.createChannel();
-        return this.channel;
     }
 }
