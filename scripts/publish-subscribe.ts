@@ -11,6 +11,7 @@ const listener = {
 };
 
 const main = async () => {
+    process.env.RABBIT_URL = 'amqp://rabbitmq.dev.qestapp.cz';
     let i = 0;
     const consumer = new RabbitConsumer<IMyMessage>(process.env.RABBIT_URL, 'qest');
     await consumer.use(listener).subscribe();

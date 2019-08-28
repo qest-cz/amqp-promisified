@@ -1,5 +1,5 @@
 import { Message, Options, Replies } from 'amqplib';
-import { ISubscribe } from '../../index';
+import { ISubscribe } from '../../interfaces';
 import { RabbitSide } from '../../rabbit-side';
 
 export class RabbitConsumer<M extends Object = any> extends RabbitSide {
@@ -34,7 +34,7 @@ export class RabbitConsumer<M extends Object = any> extends RabbitSide {
             q.queue,
             (msg: Message) => {
                 const parsed: M = JSON.parse(msg.content.toString());
-                this.subscribes.forEach((s) => s.listen(parsed));
+                this.subscribes.forEach((s) => s.listen(parsed, msg));
             },
             consumeOptions,
         );
