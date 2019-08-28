@@ -13,18 +13,18 @@ const makeListener = (listenerId): ISubscribe<IMyMessage> => {
             } else {
                 throw new Error(`Someting bad with ${msg.message}`);
             }
-        }, // tslint:disable-line
+        },
         onError: e => console.log(`Error on ${listenerId}: ${e.message}`), // tslint:disable-line
     };
 };
 
 const main = async () => {
     let i = 0;
-    const queueName = 'qest-queue-3';
+    const queueName = 'qest-queue-4';
     const queueOptions: Options.AssertQueue = {
-        durable: false,
         autoDelete: true,
     };
+
     const consumeOptions: Options.Consume = {
         noAck: true,
     };
@@ -38,10 +38,7 @@ const main = async () => {
     const taskEmiter = new RabbitTaskEmitter<IMyMessage>(process.env.RABBIT_URL, queueName, queueOptions);
     const interval = setInterval(async () => {
         const message: IMyMessage = {message: `$test ${i++}`};
-        await taskEmiter.publish(message, {
-            deliveryMode: false,
-            persistent: false,
-        });
+        await taskEmiter.publish(message);
         if (i === 5) {
             await taskEmiter.close();
             await worker.close();
