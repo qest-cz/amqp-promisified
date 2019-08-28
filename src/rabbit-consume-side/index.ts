@@ -3,7 +3,6 @@ import { ISubscribe } from '../interfaces';
 import { RabbitSide } from '../rabbit-side';
 
 export abstract class RabbitConsumeSide<M extends Object = any> extends RabbitSide {
-
     private readonly subscribes: ISubscribe<M>[] = [];
 
     use(subscribe: ISubscribe<M>) {

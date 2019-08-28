@@ -16,7 +16,7 @@ export class RabbitConsumer<M extends Object = any> extends RabbitConsumeSide<M>
     async subscribe(
         queue: string = '',
         queueOptions: Options.AssertQueue = { exclusive: true },
-        consumeOptions: Options.Consume = { },
+        consumeOptions: Options.Consume = {},
         pattern: string = '',
     ): Promise<Replies.Consume> {
         const channel = await this.getChannel();
