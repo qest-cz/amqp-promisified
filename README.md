@@ -72,18 +72,11 @@ const listener = {
 const main = async () => {
     let i = 0;
     const queueName = 'qest-work-queue';
-    const queueOptions: Options.AssertQueue = {
-        autoDelete: true,
-    };
-    
-    const consumeOptions: Options.Consume = {
-        noAck: true,
-    };
 
-    const worker = new RabbitWorker<IMyMessage>(process.env.RABBIT_URL, queueName, queueOptions);
-    await worker.use(listener).subscribe(consumeOptions);
+    const worker = new RabbitWorker<IMyMessage>(process.env.RABBIT_URL, queueName);
+    await worker.use(listener).subscribe();
 
-    const taskEmiter = new RabbitTaskEmitter<IMyMessage>(process.env.RABBIT_URL, queueName, queueOptions);
+    const taskEmiter = new RabbitTaskEmitter<IMyMessage>(process.env.RABBIT_URL, queueName);
     const interval = setInterval(async () => {
         const message: IMyMessage = {message: `$test ${i++}`};
         await taskEmiter.publish(message);
