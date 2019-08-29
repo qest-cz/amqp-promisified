@@ -20,9 +20,7 @@ const makeListener = (listenerId): ISubscribe<IMyMessage> => {
 const main = async () => {
     let i = 0;
     const consumer = new RabbitConsumer<IMyMessage>(process.env.RABBIT_URL, 'qest');
-    await consumer.use(makeListener('consumer1')).subscribe('', {
-
-    });
+    await consumer.use(makeListener('consumer1')).subscribe();
 
     const consumer2 = new RabbitConsumer<IMyMessage>(process.env.RABBIT_URL, 'qest');
     await consumer2.use(makeListener('consumer2')).subscribe();
