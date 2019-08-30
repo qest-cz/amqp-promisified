@@ -12,22 +12,27 @@ export abstract class RabbitConsumeSide<M extends Object = any> extends RabbitSi
 
     protected prepareConsumeMessageFunction(channel: Channel, sendAck: boolean = true) {
         return (msg: Message) => {
-            try {
-                const parsed: M = JSON.parse(msg.content.toString());
-                this.subscribes.forEach((s) => s.listen(parsed, msg));
-                if (sendAck) {
-                    channel.ack(msg);
-                }
-            } catch (e) {
-                this.subscribes.forEach((s) => {
+            const parsed: M = JSON.parse(msg.content.toString());
+            let hasErrors = false;
+
+            const promises = this.subscribes.map((s) => {
+                const promisifed = async () => s.listen(parsed, msg);
+                promisifed().catch((e) => {
                     if (s.onError) {
                         s.onError(e, msg);
                     }
+                    hasErrors = true;
                 });
+            });
+            Promise.all(promises).then(() => {
                 if (sendAck) {
-                    channel.nack(msg);
+                    if (hasErrors) {
+                        channel.nack(msg);
+                    } else {
+                        channel.ack(msg);
+                    }
                 }
-            }
+            });
         };
     }
 }
