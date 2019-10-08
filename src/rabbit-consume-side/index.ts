@@ -2,7 +2,7 @@ import { Channel, Message } from 'amqplib';
 import { IErrorHandler, ISubscribe, ParseMessageFn } from '../interfaces';
 import { RabbitSide } from '../rabbit-side';
 
-export class RabbitConsumeSide<M = any> extends RabbitSide {
+export abstract class RabbitConsumeSide<M = any> extends RabbitSide {
     private readonly subscribes: ISubscribe<M>[] = [];
     protected errorHandler: IErrorHandler;
     protected parseMessageFn: ParseMessageFn<M>;
