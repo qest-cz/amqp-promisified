@@ -2,7 +2,7 @@ import { Channel, Message } from 'amqplib';
 import { IErrorHandler, ISubscribe } from '../interfaces';
 import { RabbitSide } from '../rabbit-side';
 
-export abstract class RabbitConsumeSide<M extends Object = any> extends RabbitSide {
+export abstract class RabbitConsumeSide<M extends Object|Buffer = any> extends RabbitSide {
     private readonly subscribes: ISubscribe<M>[] = [];
     protected errorHandler: IErrorHandler;
 
@@ -18,7 +18,8 @@ export abstract class RabbitConsumeSide<M extends Object = any> extends RabbitSi
 
     protected prepareConsumeMessageFunction(channel: Channel, sendAck: boolean = true) {
         return (msg: Message) => {
-            const parsed: M = JSON.parse(msg.content.toString());
+
+            const parsed = this.parseMessage(msg);
 
             const promises = this.subscribes.map(async (s) => s.listen(parsed, msg));
             Promise.all(promises)
@@ -32,5 +33,14 @@ export abstract class RabbitConsumeSide<M extends Object = any> extends RabbitSi
                     return sendAck ? channel.nack(msg) : null;
                 });
         };
+    }
+
+    private parseMessage(msg: Message): M {
+        try {
+            const messageString = msg.content.toString();
+            return JSON.parse(messageString);
+        } catch (e) {
+            return msg.content as M;
+        }
     }
 }
