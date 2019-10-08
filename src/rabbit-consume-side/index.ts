@@ -1,10 +1,20 @@
 import { Channel, Message } from 'amqplib';
-import { IErrorHandler, ISubscribe } from '../interfaces';
+import { IErrorHandler, ISubscribe, ParseMessageFn } from '../interfaces';
 import { RabbitSide } from '../rabbit-side';
 
-export abstract class RabbitConsumeSide<M extends Object|Buffer = any> extends RabbitSide {
+export class RabbitConsumeSide<M = any> extends RabbitSide {
     private readonly subscribes: ISubscribe<M>[] = [];
     protected errorHandler: IErrorHandler;
+    protected parseMessageFn: ParseMessageFn<M>;
+
+    constructor(rabbitMqUrl: string, parseMessageFn: ParseMessageFn<M> = null) {
+        super(rabbitMqUrl);
+        if (parseMessageFn) {
+            this.parseMessageFn = parseMessageFn;
+        } else {
+            this.parseMessageFn = this.parseMessageJson;
+        }
+    }
 
     use(subscribe: ISubscribe<M>) {
         this.subscribes.push(subscribe);
@@ -18,8 +28,7 @@ export abstract class RabbitConsumeSide<M extends Object|Buffer = any> extends R
 
     protected prepareConsumeMessageFunction(channel: Channel, sendAck: boolean = true) {
         return (msg: Message) => {
-
-            const parsed = this.parseMessage(msg);
+            const parsed = this.parseMessageFn(msg.content);
 
             const promises = this.subscribes.map(async (s) => s.listen(parsed, msg));
             Promise.all(promises)
@@ -35,12 +44,8 @@ export abstract class RabbitConsumeSide<M extends Object|Buffer = any> extends R
         };
     }
 
-    private parseMessage(msg: Message): M {
-        try {
-            const messageString = msg.content.toString();
-            return JSON.parse(messageString);
-        } catch (e) {
-            return msg.content as M;
-        }
+    private parseMessageJson(msgContent: Buffer): M {
+        const messageString = msgContent.toString();
+        return JSON.parse(messageString);
     }
 }

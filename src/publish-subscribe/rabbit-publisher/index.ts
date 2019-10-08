@@ -1,7 +1,7 @@
 import { Options } from 'amqplib';
 import { RabbitSide } from '../../rabbit-side';
 
-export class RabbitPublisher<T extends Object = any> extends RabbitSide {
+export class RabbitPublisher<T = any> extends RabbitSide {
     private readonly exchange: string;
     private readonly type: string;
     private readonly options: Options.AssertExchange;

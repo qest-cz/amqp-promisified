@@ -1,13 +1,20 @@
 import { Options, Replies } from 'amqplib';
+import { ParseMessageFn } from '../../interfaces';
 import { RabbitConsumeSide } from '../../rabbit-consume-side';
 
-export class RabbitConsumer<M extends Object = any> extends RabbitConsumeSide<M> {
+export class RabbitConsumer<M = any> extends RabbitConsumeSide<M> {
     private readonly exchange: string;
     private readonly type: string;
     private readonly options: Options.AssertExchange;
 
-    constructor(rabbitMqUrl: string, exchange: string, type = 'fanout', options: Options.AssertExchange = { durable: false }) {
-        super(rabbitMqUrl);
+    constructor(
+        rabbitMqUrl: string,
+        exchange: string,
+        type = 'fanout',
+        options: Options.AssertExchange = { durable: false },
+        parseMessageFn: ParseMessageFn<M> = null,
+    ) {
+        super(rabbitMqUrl, parseMessageFn);
         this.exchange = exchange;
         this.type = type;
         this.options = options;

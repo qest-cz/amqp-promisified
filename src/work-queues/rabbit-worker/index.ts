@@ -1,12 +1,18 @@
 import { Options, Replies } from 'amqplib';
+import { ParseMessageFn } from '../../interfaces';
 import { RabbitConsumeSide } from '../../rabbit-consume-side';
 
-export class RabbitWorker<M extends Object = any> extends RabbitConsumeSide<M> {
+export class RabbitWorker<M = any> extends RabbitConsumeSide<M> {
     private readonly queue: string;
     private readonly options: Options.AssertQueue;
 
-    constructor(rabbitMqUrl: string, queue: string, options: Options.AssertQueue = { durable: false }) {
-        super(rabbitMqUrl);
+    constructor(
+        rabbitMqUrl: string,
+        queue: string,
+        options: Options.AssertQueue = { durable: false },
+        parseMessageFn: ParseMessageFn<M> = null,
+    ) {
+        super(rabbitMqUrl, parseMessageFn);
         this.queue = queue;
         this.options = options;
     }
