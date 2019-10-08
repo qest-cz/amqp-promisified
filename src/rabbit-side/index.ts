@@ -1,12 +1,9 @@
 import { Channel, connect } from 'amqplib';
 
 export abstract class RabbitSide {
-    private readonly rabbitMqUrl: string;
     private channel: Channel;
 
-    constructor(rabbitMqUrl: string) {
-        this.rabbitMqUrl = rabbitMqUrl;
-    }
+    constructor(private readonly rabbitMqUrl: string) {}
 
     async close() {
         await this.channel.close();
