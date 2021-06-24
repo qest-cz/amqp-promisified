@@ -23,41 +23,61 @@ const createErrorHandler = (listenerId): IErrorHandler => {
     };
 };
 
+const createConnectionErrorHandler = (listenerId): IErrorHandler => {
+    return {
+        onError: (e) => console.error(`ConnectionError on ${listenerId}: ${e.message}`), // tslint:disable-line
+    };
+};
+
+const queueName = 'qest-queue';
+const queueOptions: Options.AssertQueue = {
+    autoDelete: true,
+};
+
+const consumeOptions: Options.Consume = {
+    noAck: false,
+};
+
+const createWorker = (id: string) => {
+    const worker = new RabbitWorker<IMyMessage>(process.env.RABBIT_URL, queueName, queueOptions)
+        .use(createListener(id))
+        .enableReconnection({reconnectionTimeoutMs: 1000})
+        .onError(createErrorHandler(id))
+        .onConnectionError(createConnectionErrorHandler(id));
+
+    worker.subscribe(consumeOptions)
+        .catch(console.error); // tslint:disable-line
+
+    return worker;
+};
+
 const main = async () => {
+    const worker = createWorker('worker1');
+    const worker2 = createWorker('worker2');
+    const taskEmitter = new RabbitTaskEmitter<IMyMessage>(process.env.RABBIT_URL, queueName, queueOptions)
+        .enableReconnection({reconnectionTimeoutMs: 1000})
+        .onConnectionError(createConnectionErrorHandler('taskEmitter'));
+
     let i = 0;
-    const queueName = 'qest-queue';
-    const queueOptions: Options.AssertQueue = {
-        autoDelete: true,
-    };
-
-    const consumeOptions: Options.Consume = {
-        noAck: true,
-    };
-
-    const worker = new RabbitWorker<IMyMessage>(process.env.RABBIT_URL, queueName, queueOptions);
-    await worker
-        .use(createListener('worker1'))
-        .onError(createErrorHandler('worker1'))
-        .subscribe(consumeOptions);
-
-    const worker2 = new RabbitWorker<IMyMessage>(process.env.RABBIT_URL, queueName, queueOptions);
-    await worker2
-        .use(createListener('worker2'))
-        .onError(createErrorHandler('worker2'))
-        .subscribe(consumeOptions);
-
-    const taskEmiter = new RabbitTaskEmitter<IMyMessage>(process.env.RABBIT_URL, queueName, queueOptions);
     const interval = setInterval(async () => {
         const message: IMyMessage = {message: `$test ${i++}`};
-        await taskEmiter.publish(message);
-        if (i === 5) {
-            await taskEmiter.close();
+        try {
+            await taskEmitter.publish(message);
+        } catch (e) {
+            console.error(`taskEmitter problem: ${e.message}`, message);  // tslint:disable-line
+        }
+
+        if (i === 5000) {
+            await taskEmitter.close();
             await worker.close();
             await worker2.close();
             clearInterval(interval);
             process.exit(0);
         }
-    }, 200);
+    }, 1000);
 };
 
-main();
+main().catch(e => {
+    console.error(e); // tslint:disable-line
+    process.exit(1);
+});;

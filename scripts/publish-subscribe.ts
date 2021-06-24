@@ -18,36 +18,61 @@ const makeListener = (listenerId): ISubscribe<IMyMessage> => {
 
 const createErrorHandler = (listenerId): IErrorHandler => {
     return {
-        onError: (e) => console.log(`Error on ${listenerId}: ${e.message}`), // tslint:disable-line
+        onError: (e) => console.error(`Error on ${listenerId}: ${e.message}`), // tslint:disable-line
     };
+};
+
+const createConnectionErrorHandler = (listenerId): IErrorHandler => {
+    return {
+        onError: (e) => console.error(`ConnectionError on ${listenerId}: ${e.message}`), // tslint:disable-line
+    };
+};
+
+const createConsumer = (id: string) => {
+    const consumer = new RabbitConsumer<IMyMessage>(process.env.RABBIT_URL, 'qest')
+        .use(makeListener(id))
+        .enableReconnection({reconnectionTimeoutMs: 1000})
+        .onConnectionError(createConnectionErrorHandler(id))
+        .onError(createErrorHandler(id));
+
+    consumer.subscribe()
+        .catch(console.error); // tslint:disable-line
+
+    return consumer;
+};
+
+const createPublisher = () => {
+    return new RabbitPublisher<IMyMessage>(process.env.RABBIT_URL, 'qest')
+        .enableReconnection({reconnectionTimeoutMs: 1000})
+        .onConnectionError(createConnectionErrorHandler('publisher'));
 };
 
 const main = async () => {
     let i = 0;
-    const consumer = new RabbitConsumer<IMyMessage>(process.env.RABBIT_URL, 'qest');
-    await consumer
-        .use(makeListener('consumer1'))
-        .onError(createErrorHandler('consumer1'))
-        .subscribe();
 
-    const consumer2 = new RabbitConsumer<IMyMessage>(process.env.RABBIT_URL, 'qest');
-    await consumer2
-        .use(makeListener('consumer2'))
-        .onError(createErrorHandler('consumer2'))
-        .subscribe();
+    const publisher = createPublisher();
+    const consumer1 = createConsumer('consumer1');
+    const consumer2 = createConsumer('consumer2');
 
-    const publisher = new RabbitPublisher<IMyMessage>(process.env.RABBIT_URL, 'qest');
     const interval = setInterval(async () => {
-        const message: IMyMessage = { message: `$test ${i++}` };
-        await publisher.publish(message);
-        if (i === 5) {
+        const message: IMyMessage = {message: `$test ${i++}`};
+        try {
+            await publisher.publish(message);
+        } catch (e) {
+            console.error(`publisher problem: ${e.message}`, message);  // tslint:disable-line
+        }
+
+        if (i === 50) {
             await publisher.close();
-            await consumer.close();
+            await consumer1.close();
             await consumer2.close();
             clearInterval(interval);
             process.exit(0);
         }
-    }, 200);
+    }, 1000);
 };
 
-main();
+main().catch(e => {
+    console.error(e); // tslint:disable-line
+    process.exit(1);
+});

@@ -19,10 +19,12 @@ export class RabbitConsumer<M = any> extends RabbitConsumeSide<M> {
         consumeOptions: Options.Consume = {},
         pattern: string = '',
     ): Promise<Replies.Consume> {
-        const channel = await this.getChannel();
-        await channel.assertExchange(this.exchange, this.type, this.options);
-        const q = await channel.assertQueue(queue, queueOptions);
-        await channel.bindQueue(q.queue, this.exchange, pattern);
-        return channel.consume(q.queue, this.prepareConsumeMessageFunction(channel, !consumeOptions.noAck), consumeOptions);
+        return this.setSubscribeSteps(async () => {
+            const channel = await this.getChannel();
+            await channel.assertExchange(this.exchange, this.type, this.options);
+            const q = await channel.assertQueue(queue, queueOptions);
+            await channel.bindQueue(q.queue, this.exchange, pattern);
+            return channel.consume(q.queue, this.prepareConsumeMessageFunction(channel, !consumeOptions.noAck), consumeOptions);
+        });
     }
 }

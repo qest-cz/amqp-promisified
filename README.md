@@ -15,13 +15,8 @@ run basic example, it is necessary to create .env in config folder or set RABBIT
 run basic example, it is necessary to create .env in config folder or set RABBIT_URL env environment
 
 ## Examples
-
-### Publish/subscribe
-Example is based on official documentation of lib - https://www.rabbitmq.com/tutorials/tutorial-three-javascript.html
-
+This is basics for both examples. Tt defines transfered message, simple listener for consumer or worker and basic error handler. 
 ```typescript
-import { RabbitConsumer, RabbitPublisher } from '@qest/amqp-promisified';
-
 interface IMyMessage {
     message: string;
     type: string;
@@ -31,13 +26,30 @@ interface IMyMessage {
 const listener = {
     listen: (msg) => console.log(`type: ${msg.type}, message: ${msg.message}, count: ${msg.messageCounter}`), // tslint:disable-line
 };
+const errorHandler = {
+    onError: e => console.log(`Error with message: ${e.message}`), // tslint:disable-line
+};
+```
+
+### Publish/subscribe
+Example is based on official documentation of lib - https://www.rabbitmq.com/tutorials/tutorial-three-javascript.html
+
+```typescript
+import { RabbitConsumer, RabbitPublisher } from '@qest/amqp-promisified';
 
 const main = async () => {
     let i = 0;
     const consumer = new RabbitConsumer<IMyMessage>(process.env.RABBIT_URL, 'qest');
-    await consumer.use(listener).subscribe();
+    await consumer
+        .use(listener)
+        .onError(errorHandler)
+        .enableReconnection({reconnectionTimeoutMs: 1000})
+        .onConnectionError(errorHandler)        
+        .subscribe();
 
-    const publisher = new RabbitPublisher<IMyMessage>(process.env.RABBIT_URL, 'qest');
+    const publisher = new RabbitPublisher<IMyMessage>(process.env.RABBIT_URL, 'qest')
+        .enableReconnection({reconnectionTimeoutMs: 1000})
+        .onConnectionError(errorHandler);
     const interval = setInterval(async () => {
         const message: IMyMessage = { messageCounter: i++, type: 'test', message: `$test ${i}` };
         await publisher.publish(message);
@@ -65,8 +77,7 @@ interface IMyMessage {
 }
 
 const listener = {
-    listen: (msg: IMyMessage) => console.log(`Work with message: ${msg.message}`), // tslint:disable-line     
-    onError: e => console.log(`Error with message: ${e.message}`), // tslint:disable-line
+    listen: (msg: IMyMessage) => console.log(`Work with message: ${msg.message}`), // tslint:disable-line         
 };
 
 const main = async () => {
@@ -74,9 +85,16 @@ const main = async () => {
     const queueName = 'qest-work-queue';
 
     const worker = new RabbitWorker<IMyMessage>(process.env.RABBIT_URL, queueName);
-    await worker.use(listener).subscribe();
+    await worker
+        .use(listener)
+        .onError(errorHandler)
+        .enableReconnection({reconnectionTimeoutMs: 1000})
+        .onConnectionError(errorHandler)        
+        .subscribe();
 
-    const taskEmiter = new RabbitTaskEmitter<IMyMessage>(process.env.RABBIT_URL, queueName);
+    const taskEmiter = new RabbitTaskEmitter<IMyMessage>(process.env.RABBIT_URL, queueName)
+        .enableReconnection({reconnectionTimeoutMs: 1000})
+        .onConnectionError(errorHandler);
     const interval = setInterval(async () => {
         const message: IMyMessage = {message: `$test ${i++}`};
         await taskEmiter.publish(message);

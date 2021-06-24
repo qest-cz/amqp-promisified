@@ -13,4 +13,8 @@ export class RabbitTaskEmitter<T = any> extends RabbitSide {
         await channel.assertQueue(this.queue, this.options);
         channel.sendToQueue(this.queue, Buffer.from(JSON.stringify(object)), publishOptions);
     }
+
+    protected async doReconnectionSteps(): Promise<void> {
+        return;
+    }
 }
