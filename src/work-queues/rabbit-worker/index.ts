@@ -15,12 +15,13 @@ export class RabbitWorker<M = any> extends RabbitConsumeSide<M> {
     }
 
     async subscribe(consumeOptions: Options.Consume = {}, prefetch?: number): Promise<Replies.Consume> {
-        const channel = await this.getChannel();
-
-        const q = await channel.assertQueue(this.queue, this.options);
-        if (prefetch) {
-            channel.prefetch(prefetch);
-        }
-        return channel.consume(q.queue, this.prepareConsumeMessageFunction(channel, !consumeOptions.noAck), consumeOptions);
+        return this.setSubscribeSteps(async () => {
+            const channel = await this.getChannel();
+            const q = await channel.assertQueue(this.queue, this.options);
+            if (prefetch) {
+                channel.prefetch(prefetch);
+            }
+            return channel.consume(q.queue, this.prepareConsumeMessageFunction(channel, !consumeOptions.noAck), consumeOptions);
+        });
     }
 }

@@ -9,3 +9,8 @@ export interface IErrorHandler {
 }
 
 export type ParseMessageFn<M> = (msgContent: Buffer) => M;
+
+export interface IReconnectionSettings {
+    waitTimeoutMs?: number;
+    reconnectionTimeoutMs: number;
+}

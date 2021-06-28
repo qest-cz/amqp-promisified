@@ -16,4 +16,8 @@ export class RabbitPublisher<T = any> extends RabbitSide {
         await channel.assertExchange(this.exchange, this.type, this.options);
         channel.publish(this.exchange, routingKey, Buffer.from(JSON.stringify(object)), publishOptions);
     }
+
+    protected async doReconnectionSteps() {
+        return;
+    }
 }

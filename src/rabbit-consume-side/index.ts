@@ -1,4 +1,4 @@
-import { Channel, Message } from 'amqplib';
+import { Channel, Message, Replies } from 'amqplib';
 import { IErrorHandler, ISubscribe, ParseMessageFn } from '../interfaces';
 import { RabbitSide } from '../rabbit-side';
 
@@ -6,6 +6,7 @@ export abstract class RabbitConsumeSide<M = any> extends RabbitSide {
     private readonly subscribes: ISubscribe<M>[] = [];
     protected errorHandler: IErrorHandler;
     protected parseMessageFn: ParseMessageFn<M>;
+    protected subscribeSteps: () => Promise<Replies.Consume>;
 
     constructor(rabbitMqUrl: string, parseMessageFn: ParseMessageFn<M> = null) {
         super(rabbitMqUrl);
@@ -42,6 +43,23 @@ export abstract class RabbitConsumeSide<M = any> extends RabbitSide {
                     return sendAck ? channel.nack(msg) : null;
                 });
         };
+    }
+
+    protected async setSubscribeSteps(value: () => Promise<Replies.Consume>): Promise<Replies.Consume> {
+        this.subscribeSteps = async () => {
+            try {
+                return await value();
+            } catch (e) {
+                this.handleConnectionError(e);
+                await new Promise((resolve) => setTimeout(resolve, this.reconnectionSettings.waitTimeoutMs || 100));
+                return this.subscribeSteps();
+            }
+        };
+        return this.subscribeSteps();
+    }
+
+    protected async doReconnectionSteps(): Promise<any> {
+        return this.subscribeSteps();
     }
 
     private parseMessageJson(msgContent: Buffer): M {
